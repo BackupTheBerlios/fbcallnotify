@@ -2,6 +2,7 @@
 
 import socket
 import asyncore
+import threading
 
 class Callmonitor(asyncore.dispatcher):
     def __init__(self, host, port, jobQueue):
@@ -12,9 +13,15 @@ class Callmonitor(asyncore.dispatcher):
         self.host = host
         self.port = port
         self.jobQueue = jobQueue
+        self.exit = False
         
+        self.asyncoreThread = threading.Thread(target=self.check).start()
+         
         print "Connected to %s:%d" % (host,port)
-    
+   
+    def setExit(self):
+        self.exit = True
+   
     def handle_connect(self):
         pass
         
@@ -28,8 +35,6 @@ class Callmonitor(asyncore.dispatcher):
                     if info[0]:
                         self.jobQueue.put(info)
                 break
-            else:
-                pass
     
     def handle_close(self):
         print "Disconnected"
@@ -38,4 +43,8 @@ class Callmonitor(asyncore.dispatcher):
     def writable(self):
         return False
 
-            
+    def check(self):
+        while True:
+            asyncore.poll()
+            if self.exit:
+                break
