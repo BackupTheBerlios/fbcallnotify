@@ -1,16 +1,14 @@
 # -*- coding:utf-8 -*-
 
 import threading
-import random
 
-from notifyer import Notifyer
+import notifyer
  
 class Parse(threading.Thread):
     def __init__(self,pool):
         threading.Thread.__init__(self)
         self.pool = pool
         self.connections = {}
-        self.notifyer = {}
         
     def run(self):
         while True:
@@ -22,33 +20,25 @@ class Parse(threading.Thread):
                                                 'to':info[4],\
                                                 'overext':info[5],\
                                                 'status':'off'}
-                    randomid = random.randint(1000000000, 9999999999)
-                    self.notifyer[randomid] = Notifyer(self.connections[info[2]])
-                    self.notifyer[randomid].start()
+                    threading.Thread(target=notifyer.notifyer,args=[self.connections[info[2]]]).start()
                                     
                 elif info[1] == "CALL":
                     self.connections[info[2]] = {'type':'out',\
                                                 'from':info[4],\
                                                 'to':info[5],\
                                                 'overint':info[3]}
-                    randomid = random.randint(1000000000, 9999999999)
-                    self.notifyer[randomid] = Notifyer(self.connections[info[2]])
-                    self.notifyer[randomid].start()
+                    threading.Thread(target=notifyer.notifyer,args=[self.connections[info[2]]]).start()
                     
                 elif info[1] == "CONNECT":
                     self.connections[info[2]]['status'] = 'on'
                     self.connections[info[2]]['overint'] = info[3]
-                    randomid = random.randint(1000000000, 9999999999)
-                    self.notifyer[randomid] = Notifyer(self.connections[info[2]])
-                    self.notifyer[randomid].start()
+                    threading.Thread(target=notifyer.notifyer,args=[self.connections[info[2]]]).start()
                     
                 elif info[1] == "DISCONNECT":
                     self.connections[info[2]]['status'] = 'off'
                     self.connections[info[2]]['time'] = info[3]
-                    randomid = random.randint(1000000000, 9999999999)
-                    self.notifyer[randomid] = Notifyer(self.connections[info[2]])
-                    self.notifyer[randomid].start()
-                                        
+                    threading.Thread(target=notifyer.notifyer,args=[self.connections[info[2]]]).start()
+                                                            
                 else:
                     print "Protokoll Error"
                     print info

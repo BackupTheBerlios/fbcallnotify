@@ -19,11 +19,17 @@ class Callmonitor(asyncore.dispatcher):
         pass
         
     def handle_read(self):
-        for infostr in (self.recv(8192).split('/n')):
-            info = infostr.split(';')
-            if info[0]:
-                print info
-                self.jobQueue.put(info)
+        tmpinfo = ""
+        while True:
+            tmpinfo += self.recv(8192)
+            if tmpinfo.endswith("\n"):
+                for infostr in (tmpinfo.split('/n')):
+                    info = infostr.split(';')
+                    if info[0]:
+                        self.jobQueue.put(info)
+                break
+            else:
+                pass
     
     def handle_close(self):
         print "Disconnected"

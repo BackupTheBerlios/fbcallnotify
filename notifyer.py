@@ -1,20 +1,20 @@
 # -*- coding:utf-8 -*-
 
 import threading
-import random
+import pynotify
 
-from notify import Notify
-from notify import Notify_Thread
-
-class Notifyer(threading.Thread):
-    def __init__(self, infos):
-        threading.Thread.__init__(self)        
-        self.infos = infos
-        self.notify = {}
+def notifyer(data):
+    events = {"print" : event_print,\
+                "notify" : event_libnotify}
+    events["print"](data)
+    events["notify"]("FBCallNotify", data)
+    # Thread
+    threading.Thread(target=events["print"],args=[data]).start()
+            
+def event_print(data):
+    print data
     
-    def run(self):
-        randomid = random.randint(1000000000, 9999999999)
-        self.notify[randomid] = Notify("bash", self.infos)
-        randomid = random.randint(1000000000, 9999999999)
-        self.notify[randomid] = Notify_Thread("bash", self.infos)
-        self.notify[randomid].start()
+def event_libnotify(name, data):
+    pynotify.init("FBCallNotify")
+    notify = pynotify.Notification(name, str(data))
+    notify.show()
