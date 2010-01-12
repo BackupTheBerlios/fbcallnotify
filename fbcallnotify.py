@@ -1,21 +1,37 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
+#########################################
+# Name: FBCallNotify
+# Copyright (C): 2010 Maximilian Köhl
+# License: GPLv3
+#########################################
 
-import Queue
+import ConfigParser
+import os
 
-import interface
-import threading
-
+from multiprocessmanager import Multiprocessmanager
 from callmonitor import Callmonitor
-from parse import Parse
 
-ParseJobQueue = Queue.Queue(0)
+print "License: GPLv3"
+print "This program comes with ABSOLUTELY NO WARRANTY"
 
-callmonitor = Callmonitor("127.0.0.1", 1030, ParseJobQueue)
-parse = Parse(ParseJobQueue)
-parse.start()
+configpath=os.path.expanduser('~/.fbcallnotify/')
 
-interface.start()
+if not os.path.exists(configpath):
+    os.mkdir(configpath)
 
-callmonitor.setExit()
-parse.setExit()
+mainconfig = ConfigParser.RawConfigParser()
+mainconfig.read(configpath+'main.conf')
+
+numberconfig = {}
+i = 1
+while i < mainconfig.getint('main', 'numbers') + 1:
+    numberconfig[mainconfig.get('numbers', str(i))] = ConfigParser.RawConfigParser()
+    numberconfig[mainconfig.get('numbers', str(i))].read(configpath+mainconfig.get('numbers', str(i))+'.conf')
+    i = i + 1
+
+multiprocessmanager = Multiprocessmanager()
+callmonitor = Callmonitor(multiprocessmanager, numberconfig)
+
+multiprocessmanager.addProcess(callmonitor.start, (mainconfig.get('main', 'host'), mainconfig.getint('main', 'port')))
+multiprocessmanager.mainLoop()
